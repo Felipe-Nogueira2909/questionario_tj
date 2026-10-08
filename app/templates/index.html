@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Preenchimento e gestão de vistorias técnicas de CFTV TJCE/IPQ">
+  <title>Vistoria CFTV | TJCE / IPQ</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand" aria-label="TJCE e IPQ">
+      <span class="brand-mark">TJCE</span>
+      <span class="brand-divider"></span>
+      <span><strong>IPQ</strong><small>Vistoria Técnica CFTV</small></span>
+    </div>
+    <nav aria-label="Navegação principal">
+      <button class="nav-button active" data-view="form-view">Nova Vistoria</button>
+      <button class="nav-button" data-view="history-view">Histórico</button>
+      <button class="nav-button" id="nav-export">Exportar Excel</button>
+    </nav>
+  </header>
+
+  <main>
+    <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+
+    <section id="form-view" class="view active">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">Ficha digital</p>
+          <h1 id="form-title">Nova vistoria técnica</h1>
+          <p>Infraestrutura e sistema de CFTV — Comarcas do TJCE</p>
+        </div>
+        <span id="record-badge" class="badge" hidden></span>
+      </div>
+
+      <form id="inspection-form" novalidate>
+        <input type="hidden" id="record-id">
+
+        <section class="form-section">
+          <h2><span>1</span> Identificação</h2>
+          <div class="field-grid identification-grid">
+            <label class="field span-2">Comarca / Fórum / Unidade <em>*</em>
+              <input id="unit-search" type="search" placeholder="Digite para pesquisar uma unidade" autocomplete="off" aria-controls="unit-results">
+              <input id="unit-id" type="hidden">
+              <div id="unit-results" class="combobox-results" role="listbox" hidden></div>
+              <small id="selected-unit">Nenhuma unidade selecionada</small>
+            </label>
+            <label class="field">Data da vistoria
+              <input id="inspection-date" type="date">
+            </label>
+            <label class="field">Horário de início
+              <input id="start-time" type="time">
+            </label>
+            <label class="field">Horário de término
+              <input id="end-time" type="time">
+            </label>
+            <label class="field">Equipe IPQ
+              <input id="ipq-team" type="text" maxlength="300">
+            </label>
+            <label class="field">Responsável local
+              <input id="local-responsible" type="text" maxlength="180">
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-heading">
+            <h2><span>2</span> Levantamento dos pontos de câmera</h2>
+            <button type="button" class="secondary small" id="add-point">+ Adicionar ponto</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nº</th><th>Local / Ambiente</th><th>Tipo</th><th>Tombamento</th><th>Altura aprox. (m)</th><th>Infra</th><th>Cabo</th><th>Energia</th><th>Observações</th><th></th></tr></thead>
+              <tbody id="camera-points"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2><span>3</span> Infraestrutura — classificação e trajeto</h2>
+          <p class="helper">Padrão de aplicação (mais de uma opção pode ser marcada):</p>
+          <div class="check-cards" id="application-patterns">
+            <label><input type="checkbox" data-key="padrao_pvc_preto"> <span><strong>PVC preto antichama</strong><small>Sobre forro / não aparente</small></span></label>
+            <label><input type="checkbox" data-key="padrao_galvanizada"> <span><strong>Galvanizada</strong><small>Externa / aparente</small></span></label>
+            <label><input type="checkbox" data-key="padrao_pvc_branco"> <span><strong>PVC branco antichama</strong><small>Interna / aparente</small></span></label>
+          </div>
+          <div class="table-wrap compact-table">
+            <table>
+              <thead><tr><th>Item</th><th>PVC Preto</th><th>Galvanizado</th><th>PVC Branco</th></tr></thead>
+              <tbody id="infrastructure-items"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2><span>4</span> Verificações de cabeamento</h2>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Item</th><th>Verificação</th><th>Resultado / Quantidade</th></tr></thead>
+            <tbody id="cabling-checks"></tbody>
+          </table></div>
+        </section>
+
+        <section class="form-section">
+          <h2><span>5</span> Rack / Sala Técnica</h2>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Item</th><th>Existente</th><th>Qtd. necessária</th><th>Condição / Observação</th><th>Fixação adequada</th><th>Necessita adequação</th></tr></thead>
+            <tbody id="equipment-items"></tbody>
+          </table></div>
+          <h3>Condição do rack</h3>
+          <div class="table-wrap compact-table"><table>
+            <thead><tr><th>Condição</th><th>Resposta</th></tr></thead>
+            <tbody id="rack-conditions"></tbody>
+          </table></div>
+        </section>
+
+        <section class="form-section">
+          <h2><span>6</span> Infraestrutura elétrica</h2>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Verificação</th><th>Resposta</th><th>Observação</th></tr></thead>
+            <tbody id="electric-checks"></tbody>
+          </table></div>
+        </section>
+
+        <section class="form-section">
+          <h2><span>7</span> Certificação e identificação</h2>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Verificação</th><th>Resposta</th><th>Resultado / Observação</th></tr></thead>
+            <tbody id="certification-checks"></tbody>
+          </table></div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-heading">
+            <h2><span>10</span> Pendências encontradas</h2>
+            <button type="button" class="secondary small" id="add-issue">+ Adicionar pendência</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Nº</th><th>Pendência / Não conformidade</th><th>Local</th><th>Impacto</th><th>Solução necessária</th><th></th></tr></thead>
+            <tbody id="issues"></tbody>
+          </table></div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-heading">
+            <h2><span>11</span> Soluções / Adequações propostas</h2>
+            <button type="button" class="secondary small" id="add-solution">+ Adicionar solução</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Nº</th><th>Solução proposta</th><th>Responsável / Dependência</th><th>Prazo / Observação</th><th></th></tr></thead>
+            <tbody id="solutions"></tbody>
+          </table></div>
+        </section>
+
+        <section class="form-section">
+          <h2><span>12</span> Conclusão da vistoria</h2>
+          <fieldset class="conclusion-options">
+            <legend>Situação do local</legend>
+            <label><input type="radio" name="conclusion" value="APTO PARA EXECUÇÃO"> APTO PARA EXECUÇÃO</label>
+            <label><input type="radio" name="conclusion" value="APTO COM RESSALVAS"> APTO COM RESSALVAS</label>
+            <label><input type="radio" name="conclusion" value="NECESSITA ADEQUAÇÃO"> NECESSITA ADEQUAÇÃO</label>
+            <label><input type="radio" name="conclusion" value="NECESSITA NOVA VISTORIA"> NECESSITA NOVA VISTORIA</label>
+            <button type="button" class="clear-radio" data-clear="conclusion">Limpar resposta</button>
+          </fieldset>
+          <label class="field">Observações finais
+            <textarea id="final-notes" rows="4" maxlength="4000"></textarea>
+          </label>
+        </section>
+
+        <section class="form-section">
+          <h2><span>13</span> Responsáveis</h2>
+          <div class="responsible-grid">
+            <fieldset>
+              <legend>Responsável IPQ</legend>
+              <label class="field">Nome<input data-person="ipq" data-field="nome" maxlength="180"></label>
+              <label class="field">Cargo<input data-person="ipq" data-field="cargo" maxlength="180"></label>
+              <label class="field">Assinatura (texto opcional)<input data-person="ipq" data-field="assinatura" maxlength="300"></label>
+              <label class="field">Data<input type="date" data-person="ipq" data-field="data"></label>
+            </fieldset>
+            <fieldset>
+              <legend>Responsável TJCE / Unidade</legend>
+              <label class="field">Nome<input data-person="tjce" data-field="nome" maxlength="180"></label>
+              <label class="field">Cargo<input data-person="tjce" data-field="cargo" maxlength="180"></label>
+              <label class="field">Assinatura (texto opcional)<input data-person="tjce" data-field="assinatura" maxlength="300"></label>
+              <label class="field">Data<input type="date" data-person="tjce" data-field="data"></label>
+            </fieldset>
+          </div>
+        </section>
+
+        <div class="form-actions">
+          <button type="button" class="secondary" id="save-draft">Salvar rascunho</button>
+          <button type="button" class="primary" id="save-complete">Salvar como concluída</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="history-view" class="view">
+      <div class="page-heading"><div><p class="eyebrow">Registros</p><h1>Histórico de vistorias</h1><p>Consulte, filtre e edite os registros já salvos.</p></div></div>
+      <div class="filter-bar">
+        <label>Unidade<select id="history-unit"><option value="">Todas as unidades</option></select></label>
+        <label>Data inicial<input id="history-start" type="date"></label>
+        <label>Data final<input id="history-end" type="date"></label>
+        <button type="button" class="secondary" id="apply-filters">Filtrar</button>
+        <button type="button" class="primary" id="export-filtered">Exportar resultados</button>
+      </div>
+      <div class="table-wrap history-table"><table>
+        <thead><tr><th>ID</th><th>Unidade</th><th>Data</th><th>Equipe IPQ</th><th>Situação</th><th>Status</th><th>Última atualização</th><th>Ações</th></tr></thead>
+        <tbody id="history-rows"></tbody>
+      </table></div>
+      <p id="history-empty" class="empty-state" hidden>Nenhuma vistoria encontrada com estes filtros.</p>
+    </section>
+  </main>
+
+  <footer><span>Sistema de Vistoria Técnica CFTV — TJCE / IPQ</span><span>Acesso por link não constitui controle de acesso.</span></footer>
+  <script src="/static/js/app.js" defer></script>
+</body>
+</html>
