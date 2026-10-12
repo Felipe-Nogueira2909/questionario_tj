@@ -1,6 +1,10 @@
+from datetime import datetime, timezone
 from io import BytesIO
+from types import SimpleNamespace
 
 from openpyxl import load_workbook
+
+from app.services.excel import build_workbook
 
 
 def test_interface_and_static_assets_are_served(client):
@@ -130,6 +134,28 @@ def test_excel_individual_and_filtered_export(client):
     assert filtered.status_code == 200
     filtered_book = load_workbook(BytesIO(filtered.content))
     assert filtered_book["Vistorias"].max_row == 2
+
+
+def test_excel_export_accepts_postgresql_timezone_datetimes():
+    visit = SimpleNamespace(
+        id=99,
+        unidade_id="U0014",
+        unidade_nome="AQUIRAZ - FÓRUM",
+        data_vistoria=None,
+        status="Rascunho",
+        criado_em=datetime(2026, 10, 8, 15, 30, tzinfo=timezone.utc),
+        atualizado_em=datetime(2026, 10, 8, 16, 45, tzinfo=timezone.utc),
+        respostas={},
+    )
+
+    workbook = load_workbook(build_workbook([visit]))
+    creation = workbook["Vistorias"]["K2"].value
+    updated = workbook["Vistorias"]["L2"].value
+
+    assert creation == datetime(2026, 10, 8, 12, 30)
+    assert updated == datetime(2026, 10, 8, 13, 45)
+    assert creation.tzinfo is None
+    assert updated.tzinfo is None
 
 
 def test_invalid_unit_and_not_found(client):

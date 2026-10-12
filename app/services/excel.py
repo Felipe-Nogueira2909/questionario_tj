@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from typing import Iterable
 
@@ -6,6 +7,9 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from ..models import Vistoria
+
+
+BRAZIL_TIMEZONE = timezone(timedelta(hours=-3))
 
 
 SHEET_NAMES = [
@@ -29,6 +33,13 @@ def informed(value):
 
 def marked(value):
     return "Marcado" if value is True else "Não marcado"
+
+
+def excel_safe_datetime(value: datetime | None) -> datetime | None:
+    """Convert timezone-aware timestamps to naive Brazil time for Excel."""
+    if value is None or value.tzinfo is None:
+        return value
+    return value.astimezone(BRAZIL_TIMEZONE).replace(tzinfo=None)
 
 
 def add_rows(ws, headers: list[str], rows: Iterable[list]):
@@ -71,8 +82,8 @@ def build_workbook(visits: list[Vistoria]) -> BytesIO:
             informed(ident.get("responsavel_local")),
             informed(conclusion.get("situacao")),
             visit.status,
-            visit.criado_em,
-            visit.atualizado_em,
+            excel_safe_datetime(visit.criado_em),
+            excel_safe_datetime(visit.atualizado_em),
         ])
         for number, point in enumerate(data.get("pontos_camera", []), 1):
             point_rows.append(common + [number, informed(point.get("local_ambiente")), informed(point.get("tipo")),
