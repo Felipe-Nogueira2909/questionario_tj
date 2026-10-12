@@ -42,10 +42,17 @@ def excel_safe_datetime(value: datetime | None) -> datetime | None:
     return value.astimezone(BRAZIL_TIMEZONE).replace(tzinfo=None)
 
 
+def excel_safe_value(value):
+    """Normalize values that openpyxl cannot serialize directly."""
+    if isinstance(value, datetime):
+        return excel_safe_datetime(value)
+    return value
+
+
 def add_rows(ws, headers: list[str], rows: Iterable[list]):
-    ws.append(headers)
+    ws.append([excel_safe_value(value) for value in headers])
     for row in rows:
-        ws.append(row)
+        ws.append([excel_safe_value(value) for value in row])
 
 
 def base(visit: Vistoria) -> list:
@@ -82,8 +89,8 @@ def build_workbook(visits: list[Vistoria]) -> BytesIO:
             informed(ident.get("responsavel_local")),
             informed(conclusion.get("situacao")),
             visit.status,
-            excel_safe_datetime(visit.criado_em),
-            excel_safe_datetime(visit.atualizado_em),
+            visit.criado_em,
+            visit.atualizado_em,
         ])
         for number, point in enumerate(data.get("pontos_camera", []), 1):
             point_rows.append(common + [number, informed(point.get("local_ambiente")), informed(point.get("tipo")),

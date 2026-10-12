@@ -145,7 +145,13 @@ def test_excel_export_accepts_postgresql_timezone_datetimes():
         status="Rascunho",
         criado_em=datetime(2026, 10, 8, 15, 30, tzinfo=timezone.utc),
         atualizado_em=datetime(2026, 10, 8, 16, 45, tzinfo=timezone.utc),
-        respostas={},
+        respostas={
+            "responsaveis": {
+                "ipq": {
+                    "data": datetime(2026, 10, 8, 15, 30, tzinfo=timezone.utc),
+                },
+            },
+        },
     )
 
     workbook = load_workbook(build_workbook([visit]))
@@ -156,6 +162,7 @@ def test_excel_export_accepts_postgresql_timezone_datetimes():
     assert updated == datetime(2026, 10, 8, 13, 45)
     assert creation.tzinfo is None
     assert updated.tzinfo is None
+    assert workbook["Responsáveis"]["H2"].value == datetime(2026, 10, 8, 12, 30)
 
 
 def test_invalid_unit_and_not_found(client):
